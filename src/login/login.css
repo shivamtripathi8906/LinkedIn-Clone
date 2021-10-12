@@ -1,0 +1,37 @@
+/* .homepage {
+  height: 200vh;
+  width: 100%;
+  background-color: #f5f5f5;
+  padding: 6rem 9% 10rem 9%; 
+  display: grid;
+  grid-template-columns: 22% 52% 23%;
+  grid-gap: 2%;
+  flex-wrap: wrap;
+} */
+.connect {
+  width: 100%;
+  border-top: 1px solid rgb(216, 216, 216);
+  padding-top: 0.8rem;
+  padding-bottom: 0.8rem;
+  color: rgb(226, 226, 226);
+}
+.connect p {
+  font-size: 0.8rem;
+  padding-left: 2.5%;
+  cursor: pointer;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  color: black;
+}
+
+.tada {
+  border: none;
+}
+.date_mid {
+  font-size: 0.7rem;
+}
+.biograph {
+  width: 100%;
+  border: 1px solid green;
+}
