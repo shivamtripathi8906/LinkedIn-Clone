@@ -1,7 +1,17 @@
 import { auth, storage } from "../config/Config";
-import { SET_USER, SET_LOADING_STATUS, GET_ARTICLES } from "./actionType";
+import {
+  SET_USER,
+  SET_LOADING_STATUS,
+  GET_ARTICLES,
+  SET_LIKE,
+} from "./actionType";
 import db from "../config/Config";
 import firebase from "@firebase/app-compat";
+
+export const setLike = (payload) => ({
+  type: SET_LIKE,
+  payload: payload,
+});
 
 export const setUser = (payload) => ({
   type: SET_USER,
@@ -17,6 +27,40 @@ export const getArticles = (payload) => ({
   type: GET_ARTICLES,
   payload: payload,
 });
+
+export function setLikesAPI(payload) {
+  return (dispatch) => {
+    // db.collection("articles").add({
+    // console.log(payload.t);
+    // db.collection("articles")
+    //   .doc(payload.id)
+    //   .update({
+    //     // likesArray: payload.user.email
+    //     likesArray: firebase.firestore.FieldValue.arrayUnion(
+    //       payload.user.email
+    //     ),
+    //   });
+
+    if (!payload.t.includes(payload.user.email)) {
+      db.collection("articles")
+        .doc(payload.id)
+        .update({
+          // likesArray: payload.user.email
+          likesArray: firebase.firestore.FieldValue.arrayUnion(
+            payload.user.email
+          ),
+        });
+    } else {
+      db.collection("articles")
+        .doc(payload.id)
+        .update({
+          likesArray: firebase.firestore.FieldValue.arrayRemove(
+            payload.user.email
+          ),
+        });
+    }
+  };
+}
 
 export function signInAPI() {
   return (dispatch) => {
@@ -76,6 +120,7 @@ export function postArticleAPI(payload) {
         (error) => console.log(error.code),
         async () => {
           const downloadURL = await upload.snapshot.ref.getDownloadURL();
+
           db.collection("articles").add({
             actor: {
               description: payload.user.email,
@@ -87,6 +132,7 @@ export function postArticleAPI(payload) {
             description: payload.description,
             comments: 0,
             likes: 0,
+            likesArray: [],
           });
           dispatch(setLoading(false));
         }
@@ -103,6 +149,8 @@ export function postArticleAPI(payload) {
         description: payload.description,
         comments: 0,
         likes: 0,
+        likesArray: [],
+        id: payload.id,
       });
       dispatch(setLoading(false));
     }
@@ -116,7 +164,13 @@ export function getarticleAPI() {
     db.collection("articles")
       .orderBy("actor.date", "desc")
       .onSnapshot((snapshot) => {
-        payload = snapshot.docs.map((doc) => doc.data());
+        var payload = [];
+        snapshot.docs.map((doc) => {
+          var ob = {};
+          ob.id = doc.id;
+          ob.data = doc.data();
+          payload.push(ob);
+        });
         dispatch(getArticles(payload));
       });
   };

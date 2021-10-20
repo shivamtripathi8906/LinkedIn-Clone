@@ -9,6 +9,7 @@ import firebase from "@firebase/app-compat";
 const Postmodel = (props) => {
   const [editorText, setText] = useState("");
   const [shareImage, setShareImage] = useState("");
+  const [setidd, setactualID] = useState(0);
 
   const handleChange = (e) => {
     const image = e.target.files[0];
@@ -28,9 +29,11 @@ const Postmodel = (props) => {
       user: props.user,
       description: editorText,
       timestamp: firebase.firestore.Timestamp.now(),
+      id: setidd,
     };
     props.postArticle(payload);
     reset(e);
+    setactualID(setidd + 1);
   };
 
   const reset = (e) => {
@@ -78,22 +81,53 @@ const Postmodel = (props) => {
                     onChange={handleChange}
                   />
                   <p>
-                    <label htmlFor="file">Click me to select an image</label>
+                    <label htmlFor="file" style={{ cursor: "pointer" }}>
+                      Click me to select an image
+                    </label>
                   </p>
                   {shareImage && (
-                    <img src={URL.createObjectURL(shareImage)} alt="noim" />
+                    <ShareImmm>
+                      <img src={URL.createObjectURL(shareImage)} alt="noim" />
+                    </ShareImmm>
                   )}
                 </UploadImg>
               </Editor>
             </SharedContent>
-            <Sharecreation></Sharecreation>
-            <button onClick={(event) => postArticle(event)}>Post</button>
+            <Sharecreation>
+              <button onClick={(event) => postArticle(event)}>Post</button>
+            </Sharecreation>
           </Content>
         </Container>
       )}
     </>
   );
 };
+
+const mapStateToProps = (state) => {
+  return {
+    user: state.userState.user,
+  };
+};
+
+const mapDispatchToProps = (dispatch) => ({
+  postArticle: (payload) => {
+    dispatch(postArticleAPI(payload));
+  },
+});
+
+const ShareImmm = styled.div`
+  box-shadow: 0 1px 5px 0.1px #333;
+  margin-top: 2rem;
+  width: 18.5rem;
+  height: auto;
+  border-radius: 3px;
+  & > img {
+    width: auto;
+    height: auto;
+    max-height: 100%;
+    max-width: 100%;
+  }
+`;
 
 const Container = styled.div`
   position: fixed;
@@ -173,8 +207,19 @@ const Userinfo = styled.div`
 
 const Sharecreation = styled.div`
   display: flex;
-  justify-content: space-between;
+  justify-content: space-around;
   pad: 12px 24px;
+
+  & > button {
+    cursor: pointer;
+    width: auto;
+    padding: 0.65rem 1.8rem;
+    border-radius: 20rem;
+    margin-bottom: 2vh;
+    margin-top: 2vh;
+    border: 2px solid lightblue;
+    outline: none;
+  }
 `;
 
 const Editor = styled.div`
@@ -196,22 +241,14 @@ const Editor = styled.div`
 
 const UploadImg = styled.div`
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
   img {
     width: 100%;
     height: auto;
   }
 `;
-
-const mapStateToProps = (state) => {
-  return {
-    user: state.userState.user,
-  };
-};
-
-const mapDispatchToProps = (dispatch) => ({
-  postArticle: (payload) => {
-    dispatch(postArticleAPI(payload));
-  },
-});
 
 export default connect(mapStateToProps, mapDispatchToProps)(Postmodel);

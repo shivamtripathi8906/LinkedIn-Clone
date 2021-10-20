@@ -2,12 +2,15 @@ import { connect } from "react-redux";
 import styled from "styled-components";
 import UM from "../images/user.svg";
 import Postmodel from "./Postmodel";
+import Comment from "./Comment";
 import { useState, useEffect } from "react";
-import { getarticleAPI } from "../actions";
+import { getarticleAPI, setLikesAPI } from "../actions";
 import "../login/login.css";
-
+import firebase from "@firebase/app-compat";
+import db from "../config/Config";
 const Midhome = (props) => {
   const [showModel, setuseModel] = useState("close");
+  const [showComment, setuseComment] = useState("close");
 
   useEffect(() => {
     props.getArticles();
@@ -29,6 +32,39 @@ const Midhome = (props) => {
         setuseModel("close");
         break;
     }
+  };
+
+  const handleComment = (e) => {
+    e.preventDefault();
+    if (e.target !== e.currentTarget) {
+      return;
+    }
+    switch (showComment) {
+      case "open":
+        setuseComment("close");
+        break;
+      case "close":
+        setuseComment("open");
+        break;
+      default:
+        setuseComment("close");
+        break;
+    }
+  };
+
+  const setuserlike = (e, m, a) => {
+    e.preventDefault();
+    if (e.target !== e.currentTarget) {
+      return;
+    }
+
+    const payload = {
+      a: [],
+      user: props.user,
+      id: m,
+      t: a,
+    };
+    props.setuserlike(payload);
   };
 
   return (
@@ -57,39 +93,75 @@ const Midhome = (props) => {
         {props.user &&
           props.articles.length > 0 &&
           props.articles.map((article, key) => (
-            <Userdetail key={key}>
+            <Userdetail id={article.id} key={key}>
               <Community>
                 <Userdata>
-                  <img src={article.actor.image} alt="usemin" />
+                  <img src={article.data.actor.image} alt="usemin" />
                 </Userdata>
                 <UserFD>
-                  <h5>{article.actor.title}</h5>
-                  <p>{article.actor.email}</p>
+                  <h5>{article.data.actor.title}</h5>
+                  <p>{article.data.actor.email}</p>
 
                   <p className="date_mid">
-                    {article.actor.date.toDate().toLocaleDateString()}
+                    {article.data.actor.date.toDate().toLocaleDateString()}
                   </p>
                 </UserFD>
               </Community>
               <DescriptionUser>
-                <p>{article.description}</p>
+                <p>{article.data.description}</p>
               </DescriptionUser>
 
-              {article.sharedImg ? (
+              {article.data.sharedImg ? (
                 <PostImage>
-                  <img src={article.sharedImg} alt="b" />
+                  <img src={article.data.sharedImg} alt="b" />
                 </PostImage>
               ) : null}
 
               <Likes>
-                <h5>0 likes | 0 comments</h5>
+                {article.data.likesArray.includes(props.user.email) &&
+                article.data.likesArray.length > 1 ? (
+                  <h5>
+                    Liked by you and {article.data.likesArray.length - 1} others
+                    | 0 comments
+                  </h5>
+                ) : (
+                  <h5>{article.data.likesArray.length} like | 0 comment</h5>
+                )}
               </Likes>
               <LikeCom>
-                <button>Like</button>
-                <button>Comment</button>
+                <button
+                  onClick={(event) =>
+                    setuserlike(event, article.id, article.data.likesArray)
+                  }
+                >
+                  {article.data.likesArray.includes(props.user.email) ? (
+                    <p
+                      onClick={(event) =>
+                        setuserlike(event, article.id, article.data.likesArray)
+                      }
+                    >
+                      Dislike
+                    </p>
+                  ) : (
+                    <p
+                      onClick={(event) =>
+                        setuserlike(event, article.id, article.data.likesArray)
+                      }
+                    >
+                      Like
+                    </p>
+                  )}
+                </button>
+                <button onClick={handleComment}>Comment</button>
                 <button>Share</button>
                 <button>Send</button>
               </LikeCom>
+              <div>
+                <Comment
+                  showComment={showComment}
+                  handleComment={handleComment}
+                />
+              </div>
             </Userdetail>
           ))}
       </Component>
@@ -107,6 +179,9 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => ({
   getArticles: () => dispatch(getarticleAPI()),
+  setuserlike: (payload) => {
+    dispatch(setLikesAPI(payload));
+  },
 });
 
 const Addpost = styled.div`
@@ -230,7 +305,6 @@ const PostImage = styled.div`
 const LikeCom = styled.div`
   width: 100%;
   height: auto;
-
   display: flex;
   padding: 0.6rem 1%;
   justify-content: space-between;
